@@ -1,0 +1,7 @@
+# Static site: no build step. web/data and web/maps are committed (regenerate with pipeline/build_data.py).
+[build]
+  publish = "web"
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

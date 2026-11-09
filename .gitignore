@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+player_data/
+player_data.zip
+.DS_Store
