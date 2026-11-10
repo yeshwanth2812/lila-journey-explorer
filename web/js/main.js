@@ -126,7 +126,8 @@ function computeHot(tc) {
   const G = 16, L = LENSES[S.lens], info = index.maps[S.map], cellM = Math.round(info.scale / G), o = { humans: S.humans, bots: S.bots, tc };
   const main = coarseCounts(sel, HEAT_MODES[S.heat].codes, o, G);
   const base = S.heat === 'deaths' ? coarseCounts(sel, [EV.Position, EV.BotPosition], o, G) : null;
-  const order = [...main.counts.keys()].filter(i => main.counts[i] >= 2).sort((a, b) => main.counts[b] - main.counts[a]);
+  const order = S.lens === 'storm' ? [] : [...main.counts.keys()].filter(i => main.counts[i] >= 2)   // 39 storm deaths never repeat a spot: show markers, not rankings
+   .sort((a, b) => main.counts[b] - main.counts[a]);
   const picked = [];
   for (const i of order) {
     const cx = i % G, cy = Math.floor(i / G);
