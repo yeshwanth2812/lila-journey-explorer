@@ -12,6 +12,7 @@ const LENSES = {
   traffic: { label: 'Traffic', sub: 'Where players go',           heat: 'traffic', icon: svg('<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>'),           noun: 'position samples', share: 'of all movement' },
   kills:   { label: 'Fights',  sub: 'Where players get kills',    heat: 'kills',   icon: svg('<circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/>'),                    noun: 'kills',            share: 'of kills' },
   deaths:  { label: 'Deaths',  sub: 'Where players die',          heat: 'deaths',  icon: svg('<path d="M6 6l12 12M18 6L6 18"/>'),                                                              noun: 'deaths',           share: 'of deaths' },
+  storm:   { label: 'Storm',   sub: 'Where the storm kills',      heat: 'storm',   icon: svg('<path d="M13 2 5 14h6l-1 8 8-12h-6z"/>'),                                                        noun: 'storm deaths',     share: 'of storm deaths' },
   loot:    { label: 'Loot',    sub: 'Where loot is picked up',    heat: 'loot',    icon: svg('<path d="M12 3l8 9-8 9-8-9z"/>'),                                                                noun: 'loot pickups',     share: 'of loot' },
   replay:  { label: 'Replay',  sub: 'Watch one match unfold',     heat: 'off',     icon: svg('<path d="M7 4l13 8-13 8z"/>') },
 };
@@ -19,6 +20,7 @@ const HEAT_HELP = {
   traffic: 'Brighter = more movement. Dark patches are routes almost nobody takes.',
   kills:   'Brighter = more kills happen here (almost all against bots).',
   deaths:  'Brighter = more deaths. These are the level\'s danger zones.',
+  storm:   'Each purple marker is one player the storm caught (39 across all maps) - hover for the match time. They are scattered, not clustered.',
   loot:    'Brighter = more pickups. Dark areas are rarely looted.',
 };
 const TOGGLE_EVENTS = [   // legend rows that also act as layer switches
@@ -76,7 +78,7 @@ function setLens(l, autoplay = true) {
 }
 
 /** Fights/Deaths/Loot describe what *players* do, so bots start switched off there (they can be turned on in the legend). */
-const lensShowsBots = l => !['kills', 'deaths', 'loot'].includes(l);
+const lensShowsBots = l => !['kills', 'deaths', 'storm', 'loot'].includes(l);
 
 const activity = m => m.kills + m.deaths + m.loot / 10;
 function busiest() {
@@ -110,7 +112,7 @@ function redraw(force) {
       const note = $('scaleNote'); if (note) note.textContent = `${heatCount.toLocaleString()} ${LENSES[S.lens].noun} plotted`;
     }
   } else { pins = []; hot = null; }
-  viewer.setData(sel, { humans: S.humans, bots: S.bots, paths: S.paths, events: S.events, heat: S.heat, heatOpacity: S.heatOpacity, markersOverHeat: S.markersOverHeat, q: index.q }, tc, heatCanvas, pins, hot);
+  viewer.setData(sel, { humans: S.humans, bots: S.bots, paths: S.paths, events: S.lens === 'storm' ? { [EV.KilledByStorm]: true } : S.events, heat: S.heat, heatOpacity: S.heatOpacity, markersOverHeat: S.markersOverHeat || S.lens === 'storm', q: index.q }, tc, heatCanvas, pins, hot);
   $('clock').textContent = `${fmtTime(Math.min(S.t, maxT))} / ${fmtTime(maxT)}`;
   const sc = $('scrub'); sc.max = Math.max(1, Math.ceil(maxT)); sc.value = Math.min(S.t, maxT);
   $('play').textContent = S.playing ? '⏸' : '▶'; $('play').setAttribute('aria-label', S.playing ? 'Pause' : 'Play');
@@ -161,14 +163,14 @@ function renderDays() {
 }
 function renderPanels() {
   $('panelHeat').hidden = S.heat === 'off'; $('panelReplay').hidden = S.lens !== 'replay'; $('panelRoutes').hidden = S.lens !== 'routes';
-  if (S.heat !== 'off') { $('heatTitle').textContent = `Top spots · ${LENSES[S.lens].sub.toLowerCase()}`; $('heatHint').textContent = HEAT_HELP[S.heat]; }
+  if (S.heat !== 'off') { $('heatTitle').textContent = S.lens === 'storm' ? 'Where the storm kills' : `Top spots · ${LENSES[S.lens].sub.toLowerCase()}`; $('heatHint').textContent = HEAT_HELP[S.heat]; }
 }
 function renderHot() {
   if (S.heat === 'off') return;
   $('hotList').innerHTML = pins.length
     ? pins.map(p => `<li data-rank="${p.rank}" title="Click to zoom"><span class="rk">${p.rank}</span><div><b>${p.label}</b><span>${p.short}</span></div></li>`).join('') +
       `<li class="none" style="cursor:default"><span class="rk" style="background:none;color:var(--muted)">Σ</span><div><span>Top ${pins.length} spots = <b style="display:inline;font-size:inherit">${hot.topShare.toFixed(0)}%</b> ${LENSES[S.lens].share}</span></div></li>`
-    : '<li class="none"><span>Not enough events in this selection to rank spots.</span></li>';
+    : (S.lens === 'storm' ? '<li class="none"><span>No repeat spots: storm deaths don\'t cluster. Hover a marker for its match time.</span></li>' : '<li class="none"><span>Not enough events in this selection to rank spots.</span></li>');
 }
 function renderMatchList() {
   if (S.lens !== 'replay') return;
@@ -214,7 +216,7 @@ function describe() {
   let t, d;
   if (S.lens === 'replay') { t = `Replay · ${mp}`; d = m ? `${scope[0].toUpperCase() + scope.slice(1)}. Press ▶ to watch: the cyan dot is the human player, pink dots are bots. Loot, kills and deaths pop up as they happen.` : 'No match with human players in this selection.'; }
   else if (S.lens === 'routes') { t = `Every route · ${mp}`; d = `${scope}, drawn on top of each other. Each line is one player\'s path. Use the legend to hide humans, bots or events.`; }
-  else { t = `${LENSES[S.lens].sub} · ${mp}`; d = `${HEAT_HELP[S.heat]} Numbered pins mark the top spots - click one to zoom.`; }
+  else { t = `${LENSES[S.lens].sub} · ${mp}`; d = S.lens === 'storm' ? HEAT_HELP.storm : `${HEAT_HELP[S.heat]} Numbered pins mark the top spots - click one to zoom.`; }
   $('badge').innerHTML = `<b>${t}</b><span>${d}</span>`;
 }
 function drawSpark() {

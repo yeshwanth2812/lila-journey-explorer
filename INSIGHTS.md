@@ -13,7 +13,7 @@ All numbers come from the 5-day dataset (796 matches, 799 human journeys). **Eve
 - Humans made **2,245 bot kills but only 3 human kills** (0.13%).
 - Of **446 human deaths: 404 (90.6%) bots, 39 (8.7%) storm, 3 (0.7%) another human.**
 - 55.6% of human journeys end in death (Ambrose 55.7%, Grand Rift 50.8%, Lockdown 56.7%); median death at 4:20 into the match.
-- The storm is a late threat: the **first storm death is at 10:55**, all 39 fall between 10:55 and 14:47 - after most players have already died or left.
+- The storm is a late threat: the **first storm death is at 10:55**, all 39 fall between 10:55 and 14:47 - after most players have already died or left. They are also scattered (no map cell holds more than two; see the *Storm* view), so the storm is not producing a repeatable kill zone.
 
 **Actionable?** Yes (with one caveat: if this is only a sampling effect of who was instrumented, re-check with full match rosters).
 - Metrics affected: *deaths per match by killer type*, *time-to-first-death*, *survival/extraction rate*, *PvP encounter rate*, early-session retention (new players dying to bots repeatedly).

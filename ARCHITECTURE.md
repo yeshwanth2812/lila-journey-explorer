@@ -1,52 +1,43 @@
 # Architecture
 
-**Live tool:** **[https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)** · **Stack:** Python (offline data pipeline) → static JSON → vanilla JS + Canvas 2D (no framework, no build step).
+**Live tool:** [https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)
 
-## Why this stack
-The dataset is tiny (89k rows, 1.7 MB as JSON). A backend or database would add latency, cost and an ops surface for zero benefit, so the pipeline runs **once, offline**, and the app is a **static site** that any host (Netlify / Vercel / GitHub Pages) serves for free. A designer opens a link and it works - nothing to install or sign in to. Plain ES modules + Canvas 2D keep the bundle at ~25 KB of code and let me draw 60k path segments + 12k markers smoothly, with no dependency to audit or upgrade.
+## What I built with, and why
+Python offline pipeline → static JSON → vanilla JS + Canvas 2D, hosted as a static site (GitHub Pages; Netlify/Vercel configs included). The data is small (89k rows, 1.7 MB as JSON) and read-only, so a backend or database would add cost and failure points for no benefit. A designer just opens a link. Plain ES modules (~700 lines) draw 60k path segments and 12k markers smoothly with no dependencies to audit.
 
 ## Data flow
 ```
-player_data/February_*/*.nakama-0 (1,243 parquet files)
-   │  pipeline/build_data.py  (pyarrow, or bundled pure-python reader)
-   │   decode event bytes → classify human/bot → rebase ts → world→UV → quantise
-   ▼
-web/data/index.json          match list + counts (150 KB, loaded at start → powers filters & match list)
-web/data/<Map>.json          every journey on one map as parallel arrays t[],u[],v[],e[] (lazy-loaded per map, 0.1–1 MB, ~40% of that gzipped)
-web/maps/<Map>.webp          minimaps resized to 2048² (≈190 KB each instead of 9000² JPEG)
-   ▼  browser: data.js precomputes pixel coords → viewer.js draws minimap, heatmap, paths, markers → main.js owns state/filters/playback
+1,243 parquet files → pipeline/build_data.py → web/data/index.json (match list, loaded at start)
+                                             → web/data/<Map>.json (journeys as t[],u[],v[],e[]; lazy-loaded per map)
+                                             → web/maps/<Map>.webp (minimaps resized to 2048²)
+browser: data.js (pixel coords) → viewer.js (canvas: map, heatmap, paths, markers, pins) ← main.js (filters, playback, URL state)
 ```
-Filtering, the timeline and heatmaps all run client-side on the selected matches, so every interaction is instant. Filter state is mirrored into the URL hash (`#map=Lockdown&heat=deaths&match=<id>`) so a designer can share an exact view.
+The pipeline decodes event bytes, classifies human/bot, rebases time, maps coordinates and quantises. Filters, timeline, heatmaps and hotspot ranking then run client-side on the selected matches, so every interaction is instant.
 
-## Coordinate mapping (the tricky part)
-Per the README: `u = (x − origin_x)/scale`, `v = (z − origin_z)/scale`, `pixel_x = u·1024`, `pixel_y = (1 − v)·1024`. Points to get right:
-1. **Use `x` and `z`; ignore `y`.** `y` is elevation (e.g. 100-162 on Ambrose) and would put every point off the map.
-2. **Flip Y once, in one place** (`data.js`): image origin is top-left, world +z points "up" the map.
-3. **Per-map origin/scale** (Ambrose 900/-370/-473, GrandRift 581/-290/-290, Lockdown 1000/-500/-500).
-4. **Minimaps are not all 1024²:** 4320², 2160×2158 and 9000². I normalise each to a square 2048² image and draw it into a 1024-unit logical canvas, so README pixel coordinates stay the single coordinate space for every map and for zoom/pan.
-5. **Verified three ways:** (a) `pipeline/tests/test_mapping.py` reproduces the README's worked example (-301.45, -355.55 → 78, 890) and the corner cases; (b) 0 of 89,104 points fall outside [0,1]² on any map; (c) visual check - paths follow roads, bridges and building footprints on all three maps (see `docs/`).
-Quantisation: UV stored as integers ×10⁴ (≈0.1 px) to keep JSON small.
+## Coordinate mapping
+`u = (x − origin_x)/scale`, `v = (z − origin_z)/scale`, `pixel_x = u·1024`, `pixel_y = (1 − v)·1024`, with per-map origin/scale from the data README.
+1. **Use `x` and `z`; drop `y`**, which is elevation.
+2. **Flip Y once** (`data.js`): images count rows from the top, world z counts up.
+3. **Minimaps are not 1024²** (the README says they are; real sizes are 4320², 2160×2158, 9000²). Each is resized to a square 2048² and drawn into a 1024-unit canvas, so README pixel coordinates are the single coordinate space for every map and for zoom/pan.
+4. **Verified:** `pipeline/tests/test_mapping.py` reproduces the README example (-301.45, -355.55 → 78, 890); 0 of 89,104 points fall outside the map; paths visibly follow roads and buildings on all three maps.
 
-## Data quirks & assumptions
-| What I found | What I did |
+## Assumptions where the data was ambiguous
+| Issue | Decision |
 |---|---|
-| `ts` is typed *timestamp[ms]* but the values (~1.77e9) are **epoch seconds** (Feb 10-14 2026; position samples are exactly 5 apart; interpreted as ms they'd be 1970-01-21) | Treat as seconds; show **match-relative time** = ts − earliest ts in that match, so all players in a match align. Longest match = 14:50. |
-| README says bots have numeric ids, humans UUIDs. **17 numeric-id files contain `Position`/`Loot`** (human event types), and none contain `BotPosition` | Classify by **event evidence** (`BotPosition` ⇒ bot, `Position` ⇒ human), filename only as fallback. |
-| Kill events are logged on the *actor's* file, and bot files also contain `BotKill`/`BotKilled` (README only describes human files) | Draw every event at its file owner's position; the tooltip says Human/Bot. Events on bot journeys are therefore "bot-vs-bot/other" combat - flagged by pink-vs-cyan ownership. |
-| 793 of 796 matches have ≤1 human journey; PvP events = 6 total | Tool still supports PvP markers; I call this out in `INSIGHTS.md` rather than treating it as a bug. May reflect sampling of who was instrumented. |
-| 1 match has files in two day folders; 4 matches' UTC date ≠ folder date (near midnight) | Day = folder of the earliest file; filters use the folder, as in the dataset. |
-| 1,505 rows duplicate (user, match, ts, event, x, z) - mostly `Loot` (multi-item pickups in the same second) | Kept: they are plausibly real pickups; dropping would undercount loot. |
-| Sub-second ordering is impossible (1 s resolution) | Stable sort preserves file order for same-second events. |
-| Feb 14 is a partial day | Shown as-is; counts for that day are not comparable. |
-| Heatmap "playable area" for dead-zone analysis is not in the data | Approximated from minimap brightness (cells darker than a threshold = void). Used only in `INSIGHTS.md`. |
+| README says `ts` is "time elapsed within the match" in ms, but values are ~1.77e9, consistent with **epoch seconds** (Feb 10-14 2026; samples 5 apart; match spans ≤ 890) | Treat as seconds; show time since the match's first event so all players align. |
+| README: numeric id = bot. 17 numeric-id files contain `Position`/`Loot` (human events) | Classify by event evidence (`BotPosition` ⇒ bot); filename only as fallback. |
+| README says bots emit `BotKill`/`BotKilled` but defines them from the human's view | Draw every event at its file owner's position; tooltip says Human/Bot. |
+| README says matches have "multiple humans"; here 793 of 796 have one. PvP events: 6 | Supported but flagged in INSIGHTS as a possible sampling effect. |
+| 4 matches' UTC date ≠ folder date; 1 match spans two folders | Day = folder of earliest file. |
+| 1,505 duplicate rows, mostly `Loot` in the same second | Kept (plausible multi-item pickups). |
+| "Playable area" is not in the data | Approximated from minimap brightness; only used in INSIGHTS. |
 
 ## Trade-offs
 | Decision | Alternative | Why |
 |---|---|---|
-| Static site + pre-built JSON | API + DB (FastAPI/DuckDB) | Data is small and read-only; static = free, instant, zero ops. Cost: re-run pipeline when data changes. |
-| One JSON per map, lazy-loaded | One file / per-match files | Ambrose is 1 MB (≈0.36 MB gzipped) and aggregate heatmaps need all matches anyway; per-match files would mean ~800 requests. |
-| Canvas 2D | SVG / WebGL / deck.gl | SVG chokes at 60k segments; WebGL is overkill and harder to maintain for ~100k points. |
-| Client-side Gaussian-splat heatmap (256² grid, p98-normalised) | Pre-rendered PNG tiles | Heatmaps respond to every filter, day, match and the time cursor. p98 normalisation stops one hotspot from washing out the rest. |
-| No framework / bundler | React + Vite | ~600 lines of UI; fewer moving parts, no `npm install` to review the code. Cost: manual DOM updates. |
-| Pure-python parquet reader fallback | Require pyarrow | Pipeline runs anywhere with only Pillow. Used when pyarrow is absent. |
-| Bot/human by event evidence | Filename rule | Fixes 17 misclassified journeys. |
+| Static site, pre-built JSON | API + DB | Read-only small data → free, instant, zero ops. Cost: re-run pipeline when data changes. |
+| One JSON per map | Per-match files | Aggregate heatmaps need all matches; ~800 requests would be slower. |
+| Canvas 2D | SVG / WebGL | SVG chokes at 60k segments; WebGL is overkill. |
+| Client-side heatmap (256² grid, p98-normalised) | Pre-rendered tiles | Reacts to every filter and the time cursor; p98 stops one hotspot washing out the rest. |
+| No framework | React + Vite | ~700 lines of UI; nothing to install. Cost: manual DOM updates. |
+| Bundled parquet reader as default | Require pyarrow | Runs with only Pillow; verified on all 1,243 files. pyarrow is opt-in (`--engine pyarrow`). |

@@ -11,7 +11,7 @@ The sidebar is a short top-to-bottom flow, and every control explains itself:
 
 | Step | What it does |
 |---|---|
-| **1 · What do you want to see?** | Six big cards, each answering a plain question: **Routes** (every player's path) · **Traffic** (where players go) · **Fights** (where kills happen) · **Deaths** (where players die) · **Loot** (where loot is taken) · **Replay** (watch one match unfold, auto-picks the busiest). |
+| **1 · What do you want to see?** | Seven cards, each answering a plain question: **Routes** (every player's path) · **Traffic** (where players go) · **Fights** (where kills happen) · **Deaths** (where players die) · **Storm** (where the storm kills; individual markers with match time) · **Loot** (where loot is taken) · **Replay** (watch one match unfold, auto-picks the busiest). |
 | **2 · Which map and days?** | Map cards with minimap thumbnails; day chips (multi-select, "All days"). |
 | **3 · Context panel** | Changes with the view. For heatmaps: a **ranked list of the top 5 hotspots** (share of the total, plus "× risk" = how much deadlier than average per visit, for deaths). For Replay: a match picker showing humans/bots, loot, kills, deaths. |
 | **Numbered pins on the map** | The same top-5 hotspots drawn on the minimap (e.g. "#1 · 7.9% of deaths · 2.5× risk"). **Click a pin or a list item to zoom to it.** Hover any heatmap to read "N deaths in this ~56 m square". |
@@ -23,10 +23,10 @@ The sidebar is a short top-to-bottom flow, and every control explains itself:
 ![heatmap](docs/03-deaths-hotspots.png)
 
 ## Walkthrough video
-[`docs/walkthrough.mp4`](docs/walkthrough.mp4) - ~40-second tour of every feature (the six views, hotspot pins, replay, zoom).
+[`docs/walkthrough.mp4`](docs/walkthrough.mp4) - ~40-second tour of every feature (the seven views, hotspot pins, replay, zoom).
 
 ## Tech stack
-Python 3 (offline pipeline + `analysis/insights.py`; Pillow, optional pyarrow) → static JSON/WebP → vanilla JS ES modules + Canvas 2D. **No backend, no env vars, no build step.**
+Python 3 (offline pipeline + `analysis/insights.py`; Pillow; bundled parquet reader, pyarrow optional) → static JSON/WebP → vanilla JS ES modules + Canvas 2D. **No backend, no env vars, no build step.**
 
 ## Run locally
 ```bash
@@ -36,8 +36,8 @@ The generated `web/data/` and `web/maps/` are committed, so this works straight 
 
 ## Rebuild the data (only if the raw data changes)
 ```bash
-pip install -r pipeline/requirements.txt        # pillow (+ pyarrow if you like)
-python pipeline/build_data.py --src /path/to/player_data --out web
+pip install -r pipeline/requirements.txt        # just pillow
+python pipeline/build_data.py --src /path/to/player_data --out web    # add --engine pyarrow to use pyarrow instead of the bundled reader
 python pipeline/tests/test_mapping.py           # coordinate-mapping check
 ```
 `--src` is the unzipped `player_data/` folder (with `February_*/` and `minimaps/`).

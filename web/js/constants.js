@@ -20,6 +20,7 @@ export const HEAT_MODES = {
   traffic: { label: 'Traffic',     codes: [EV.Position, EV.BotPosition], gamma: 0.55 },
   kills:   { label: 'Kill zones',  codes: [EV.Kill, EV.BotKill],         gamma: 0.8 },
   deaths:  { label: 'Death zones', codes: [EV.Killed, EV.BotKilled, EV.KilledByStorm], gamma: 0.8 },
+  storm:   { label: 'Storm deaths', codes: [EV.KilledByStorm],           gamma: 0.8 },
   loot:    { label: 'Loot',        codes: [EV.Loot],                     gamma: 0.6 },
 };
 

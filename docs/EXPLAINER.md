@@ -14,6 +14,7 @@ Open **https://yeshwanth2812.github.io/lila-journey-explorer/**. In step 1, pick
 | **Traffic** | Where do players go? | Brighter glow = more movement; dark patches are ignored areas. |
 | **Fights** | Where do kills happen? | Brighter = more kills (almost all against bots). |
 | **Deaths** | Where do players die? | Brighter = more deaths. Pins show the top 5 spots with their share of all deaths and a **risk** multiple (how much deadlier than the map average, per visit). |
+| **Storm** | Where does the storm kill players? | Each purple marker is one player caught by the storm; hover for the match time. Only 39 exist, scattered, first at 10:55. |
 | **Loot** | Where is loot picked up? | Brighter = more pickups; dark = rarely looted. |
 | **Replay** | What happens in one match? | Plays the busiest match; cyan dot = human, pink = bots; loot ◆, kills ●, deaths ✕, storm ▼ appear as they happen. |
 
@@ -36,10 +37,10 @@ Each event has world coordinates (x, y, z). Three things matter:
 It is checked three ways: a test reproducing the example from the data README, a check that no point falls outside the map, and a visual check that routes follow the roads on the minimap.
 
 ## 5. Data gotchas I found (and what I did)
-- **Timestamps are labelled milliseconds but are really seconds** → treated as seconds and shown as time since the match started.
+- **Timestamps:** the README says "time elapsed within the match" in ms, but the values look like epoch seconds (Feb 2026) → treated as seconds and shown as time since the match started.
 - **Bots vs humans:** the README says "numeric ID = bot", but 17 numeric-ID files behave like humans → classified by what events they contain instead of by file name.
-- **Bots also log kill events** (not described in the README) → drawn at the bot's position and labelled as a bot's event.
-- **Minimap images differ in size** (up to 9000×9000) → all converted to one 2048×2048 size so one coordinate system works everywhere.
+- **Bot files also contain kill/death events**, defined only from the human's point of view in the README → drawn at the bot's position and labelled as a bot's event.
+- **Minimap images differ in size** (the README says 1024×1024; real files go up to 9000×9000) → all converted to one 2048×2048 size so one coordinate system works everywhere.
 - **One match spans two days; a few straddle midnight** → grouped by the day folder they came from.
 - **Repeated loot rows in the same second** → kept; they are plausibly multi-item pickups.
 
