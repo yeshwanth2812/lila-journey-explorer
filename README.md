@@ -2,7 +2,7 @@
 
 A browser tool that lets Level Designers see how players actually move, fight, loot and die on the three LILA BLACK maps, built from 5 days of production telemetry (Feb 10-14 2026, 1,243 journeys, 796 matches, 89k events).
 
-**Live URL:** `<paste deployed URL here>` &nbsp;·&nbsp; Docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [INSIGHTS.md](INSIGHTS.md)
+**Live URL:** **[https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)** &nbsp;·&nbsp; Docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [INSIGHTS.md](INSIGHTS.md)
 
 ![overview](docs/01-aggregate.png)
 
@@ -20,8 +20,11 @@ A browser tool that lets Level Designers see how players actually move, fight, l
 ![playback](docs/02-match-playback.png)
 ![heatmap](docs/03-heatmap-deaths.png)
 
+## Walkthrough video
+[`docs/walkthrough.mp4`](docs/walkthrough.mp4) - ~35-second tour of every feature (map/date/match filters, playback, markers, heatmaps, zoom, share link).
+
 ## Tech stack
-Python 3 (offline pipeline; Pillow, optional pyarrow) → static JSON/WebP → vanilla JS ES modules + Canvas 2D. **No backend, no env vars, no build step.**
+Python 3 (offline pipeline + `analysis/insights.py`; Pillow, optional pyarrow) → static JSON/WebP → vanilla JS ES modules + Canvas 2D. **No backend, no env vars, no build step.**
 
 ## Run locally
 ```bash
@@ -46,6 +49,7 @@ It is a plain static folder (`web/`), pick any:
 ## Repo layout
 ```
 web/            index.html, css/, js/ (constants, data, heatmap, viewer, main), data/, maps/
+analysis/       insights.py  (reproduces every number in INSIGHTS.md)
 pipeline/       build_data.py, miniparquet.py (pure-python reader fallback), tests/
 docs/           screenshots
 ARCHITECTURE.md  INSIGHTS.md

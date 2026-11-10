@@ -1,6 +1,6 @@
 # Architecture
 
-**Live tool:** `<paste deployed URL here>` · **Stack:** Python (offline data pipeline) → static JSON → vanilla JS + Canvas 2D (no framework, no build step).
+**Live tool:** **[https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)** · **Stack:** Python (offline data pipeline) → static JSON → vanilla JS + Canvas 2D (no framework, no build step).
 
 ## Why this stack
 The dataset is tiny (89k rows, 1.7 MB as JSON). A backend or database would add latency, cost and an ops surface for zero benefit, so the pipeline runs **once, offline**, and the app is a **static site** that any host (Netlify / Vercel / GitHub Pages) serves for free. A designer opens a link and it works - nothing to install or sign in to. Plain ES modules + Canvas 2D keep the bundle at ~25 KB of code and let me draw 60k path segments + 12k markers smoothly, with no dependency to audit or upgrade.
@@ -33,7 +33,7 @@ Quantisation: UV stored as integers ×10⁴ (≈0.1 px) to keep JSON small.
 | `ts` is typed *timestamp[ms]* but the values (~1.77e9) are **epoch seconds** (Feb 10-14 2026; position samples are exactly 5 apart; interpreted as ms they'd be 1970-01-21) | Treat as seconds; show **match-relative time** = ts − earliest ts in that match, so all players in a match align. Longest match = 14:50. |
 | README says bots have numeric ids, humans UUIDs. **17 numeric-id files contain `Position`/`Loot`** (human event types), and none contain `BotPosition` | Classify by **event evidence** (`BotPosition` ⇒ bot, `Position` ⇒ human), filename only as fallback. |
 | Kill events are logged on the *actor's* file, and bot files also contain `BotKill`/`BotKilled` (README only describes human files) | Draw every event at its file owner's position; the tooltip says Human/Bot. Events on bot journeys are therefore "bot-vs-bot/other" combat - flagged by pink-vs-cyan ownership. |
-| 794 of 796 matches have ≤1 human journey; PvP events = 6 total | Tool still supports PvP markers; I call this out in `INSIGHTS.md` rather than treating it as a bug. May reflect sampling of who was instrumented. |
+| 793 of 796 matches have ≤1 human journey; PvP events = 6 total | Tool still supports PvP markers; I call this out in `INSIGHTS.md` rather than treating it as a bug. May reflect sampling of who was instrumented. |
 | 1 match has files in two day folders; 4 matches' UTC date ≠ folder date (near midnight) | Day = folder of the earliest file; filters use the folder, as in the dataset. |
 | 1,505 rows duplicate (user, match, ts, event, x, z) - mostly `Loot` (multi-item pickups in the same second) | Kept: they are plausibly real pickups; dropping would undercount loot. |
 | Sub-second ordering is impossible (1 s resolution) | Stable sort preserves file order for same-second events. |

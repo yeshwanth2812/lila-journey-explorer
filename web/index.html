@@ -13,7 +13,7 @@
   <aside id="side">
     <header>
       <div class="logo">◭</div>
-      <div><h1>Journey Explorer</h1><p>LILA BLACK · Feb 10–14, 2026</p></div>
+      <div style="flex:1"><h1>Journey Explorer</h1><p>LILA BLACK · Feb 10–14, 2026</p></div><button id="helpBtn" class="help" aria-label="How to use" title="How to use">?</button>
     </header>
 
     <section>
@@ -33,7 +33,7 @@
         <label class="rng">Opacity <input type="range" id="heatOpacity" min="20" max="100" value="80"></label>
         <label class="rng">Spread <input type="range" id="heatRadius" min="2" max="14" value="6"></label>
         <label class="chk small"><input type="checkbox" id="markersOverHeat"><span>keep event markers on top</span></label>
-        <div class="gradient"><span>low</span><i id="gradBar"></i><span>high</span></div>
+        <div class="gradient"><span>low</span><i id="gradBar"></i><span>high</span></div><div id="heatNote" class="muted"></div>
       </div>
     </section>
 
@@ -79,6 +79,12 @@
         <button id="zreset" title="Reset view" aria-label="Reset view">⤢</button>
       </div>
       <div id="badge"></div>
+      <div id="help" hidden><button id="helpClose" aria-label="Close">×</button><h3>How to read this</h3>
+        <p><b>Lines</b> are player journeys: <span style="color:#22d3ee">cyan = human</span>, <span style="color:#f472b6">pink = bot</span>.</p>
+        <p><b>Markers:</b> ◆ loot · ● kill · ✕ death · ▼ storm death.</p>
+        <p><b>Start:</b> pick a <i>Match</i> and press ▶, or choose a <i>Heatmap</i> (Death zones shows where the level kills players).</p>
+        <p><b>Aggregate view</b> overlays every match in the filter, all starting at 00:00.</p>
+        <p>Scroll = zoom · drag = pan · double-click = reset · <kbd>Space</kbd> play.</p></div>
     </div>
     <div id="timeline">
       <button id="play" aria-label="Play">▶</button>

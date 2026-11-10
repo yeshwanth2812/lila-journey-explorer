@@ -66,6 +66,7 @@ function redraw(force) {
       heatCanvas = r.canvas; heatCount = r.count; heatKey = key; lastHeat = performance.now();
     }
   }
+  $('heatNote').textContent = S.heat === 'off' ? '' : `${heatCount.toLocaleString()} ${HEAT_MODES[S.heat].label.toLowerCase()} events plotted · brightness is relative (98th-percentile scaled)`;
   viewer.setData(sel, { humans: S.humans, bots: S.bots, paths: S.paths, events: S.events, heat: S.heat, heatOpacity: S.heatOpacity, markersOverHeat: S.markersOverHeat, q: index.q }, tc, heatCanvas);
   $('clock').textContent = `${fmtTime(Math.min(S.t, maxT))} / ${fmtTime(maxT)}`;
   const sc = $('scrub'); sc.max = Math.max(1, Math.ceil(maxT)); sc.value = Math.min(S.t, maxT);
@@ -105,6 +106,8 @@ function buildStaticUI() {
   $('sort').addEventListener('change', e => { S.sort = e.target.value; renderMatchList(); });
   $('allMatches').addEventListener('click', () => { S.matchId = null; refresh(true); });
   $('daysAll').addEventListener('click', () => { S.days = new Set(index.days); S.matchId = null; refresh(true); });
+  $('helpBtn').addEventListener('click', () => $('help').hidden = !$('help').hidden); $('helpClose').addEventListener('click', () => $('help').hidden = true);
+  try { if (!localStorage.getItem('lila-help')) { $('help').hidden = false; localStorage.setItem('lila-help', '1'); } } catch (e) { $('help').hidden = false; }
   $('play').addEventListener('click', () => S.playing ? stop() : play());
   $('scrub').addEventListener('input', e => { stop(); S.t = +e.target.value; redraw(true); renderStats(); });
   $('speed').addEventListener('change', e => S.speed = +e.target.value);
@@ -141,7 +144,7 @@ function renderMatchList() {
   $('allMatches').classList.toggle('on', !S.matchId);
   let shown = list.slice(0, 400);
   const cur = list.find(m => m.id === S.matchId); if (cur && !shown.includes(cur)) shown = [cur, ...shown];   // keep the selection visible
-  $('matchList').innerHTML = shown.map(m => `<div class="item ${m.id === S.matchId ? 'on' : ''}" data-id="${m.id}" role="option"><b>${m.id.slice(0, 8)}</b><span>${dayLabel(m.day)} · ${fmtTime(m.dur)}</span>
+  $('matchList').innerHTML = shown.map(m => `<div class="item ${m.id === S.matchId ? 'on' : ''}" data-id="${m.id}" role="option"><b>${dayLabel(m.day)} · ${fmtTime(m.dur)}</b><span>#${m.id.slice(0, 6)}</span>
     <div class="tags"><span class="tag-h">${m.humans}H</span><span class="tag-b">${m.bots}B</span><span class="tag-l">◆${m.loot}</span><span class="tag-k">●${m.kills}</span><span class="tag-d">✕${m.deaths}</span>${m.storm ? `<span class="tag-s">▼${m.storm}</span>` : ''}</div></div>`).join('')
     + (list.length > 400 ? `<div class="item"><span>+${list.length - 400} more — narrow by date or sort</span></div>` : '') || '<div class="item"><span>No matches</span></div>';
   $('matchList').querySelector('.item.on')?.scrollIntoView({ block: 'nearest' });
