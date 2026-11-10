@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LILA BLACK · Player Journey Explorer</title>
-<meta name="description" content="Explore player journeys, fights, loot, storm deaths and heatmaps on LILA BLACK minimaps.">
+<meta name="description" content="See where players go, fight, loot and die on every LILA BLACK map.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322d3ee'/%3E%3Cpath d='M7 23 14 9l4 8 3-5 4 11z' fill='%2305070b'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -13,102 +13,89 @@
   <aside id="side">
     <header>
       <div class="logo">◭</div>
-      <div style="flex:1"><h1>Journey Explorer</h1><p>LILA BLACK · Feb 10–14, 2026</p></div><button id="helpBtn" class="help" aria-label="How to use" title="How to use">?</button>
+      <div class="ttl"><h1>Journey Explorer</h1><p>Player telemetry · Feb 10–14</p></div>
+      <button id="helpBtn" class="help" aria-label="How to use this tool" title="How to use this tool">?</button>
     </header>
 
-    <section class="quick">
-      <h2>Quick views <span class="muted">one click answers a question</span></h2>
-      <div id="quick" class="qgrid">
-        <button data-q="deaths"><b>Where do players die?</b><small>Death-zone heatmap</small></button>
-        <button data-q="traffic"><b>Where do players go?</b><small>Traffic heatmap</small></button>
-        <button data-q="loot"><b>Where is loot taken?</b><small>Loot heatmap</small></button>
-        <button data-q="watch"><b>Watch a match</b><small>Replays the busiest one</small></button>
-      </div>
+    <section>
+      <h2><span class="n">1</span> What do you want to see?</h2>
+      <div id="lenses" class="lenses" role="radiogroup" aria-label="View"></div>
     </section>
 
     <section>
-      <h2>1 · Map</h2>
-      <div id="maps" class="seg"></div>
+      <h2><span class="n">2</span> Which map and days?</h2>
+      <div id="maps" class="maps" role="radiogroup" aria-label="Map"></div>
+      <div id="days" class="chips" aria-label="Days"></div>
     </section>
 
-    <section>
-      <h2>2 · Dates <button id="daysAll" class="link">all</button></h2>
-      <div id="days" class="chips"></div>
+    <section id="panelHeat" hidden>
+      <h2><span class="n">3</span> <span id="heatTitle">Hotspots</span></h2>
+      <p id="heatHint" class="hint"></p>
+      <ol id="hotList" class="hot"></ol>
     </section>
 
-    <section>
-      <h2>3 · Heatmap <span class="muted">spot patterns</span></h2>
-      <div id="heatModes" class="chips"></div>
-      <div id="heatHint" class="hint"></div>
-      <div id="heatOpts" class="stack">
-        <label class="rng">Opacity <input type="range" id="heatOpacity" min="20" max="100" value="80"></label>
-        <label class="rng">Spread <input type="range" id="heatRadius" min="2" max="14" value="6"></label>
-        <label class="chk small"><input type="checkbox" id="markersOverHeat"><span>keep event markers on top</span></label>
-        <div class="gradient"><span>low</span><i id="gradBar"></i><span>high</span></div><div id="heatNote" class="muted"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>4 · Replay a match <span id="matchCount" class="muted"></span></h2>
+    <section id="panelReplay" hidden>
+      <h2><span class="n">3</span> Pick a match to replay <span id="matchCount" class="muted"></span></h2>
       <div class="row">
         <select id="sort" aria-label="Sort matches">
-          <option value="date">Sort: chronological</option>
-          <option value="dur">Sort: longest</option>
-          <option value="kills">Sort: most kills</option>
-          <option value="deaths">Sort: most deaths</option>
-          <option value="loot">Sort: most loot</option>
+          <option value="act">Most action first</option>
+          <option value="date">Oldest first</option>
+          <option value="dur">Longest first</option>
+          <option value="deaths">Most deaths first</option>
+          <option value="loot">Most loot first</option>
         </select>
-        <label class="chk small"><input type="checkbox" id="onlyHumans"><span>with humans only</span></label>
       </div>
-      <button id="allMatches" class="all-btn">All matches in filter (aggregate)</button>
       <div id="matchList" class="list" role="listbox" aria-label="Matches"></div>
     </section>
 
-    <section>
-      <h2>5 · Show / hide layers</h2>
-      <div class="row wrap">
-        <label class="tog human"><input type="checkbox" id="showHumans" checked><span><i></i>Humans</span></label>
-        <label class="tog bot"><input type="checkbox" id="showBots" checked><span><i></i>Bots</span></label>
-        <label class="tog"><input type="checkbox" id="showPaths" checked><span>Paths</span></label>
-      </div>
-      <div id="events" class="events"></div>
+    <section id="panelRoutes" hidden>
+      <h2><span class="n">3</span> How to read this</h2>
+      <p class="hint">Each line is one player's route through a match, with all matches drawn on top of each other. <b>Cyan = human</b>, <b>pink = bots</b>. Click the legend (bottom-left of the map) to hide or show routes and events. To follow one player in time, choose <b>Replay</b>.</p>
     </section>
 
-    <section id="stats"></section>
-    <footer>Tip: scroll to zoom · drag to pan · double-click to reset · <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> step</footer>
+    <section id="stats" aria-label="Totals for the current view"></section>
+
+    <details id="more">
+      <summary>More options</summary>
+      <div class="stack">
+        <label class="rng">Heatmap strength <input type="range" id="heatOpacity" min="20" max="100" value="80"></label>
+        <label class="rng">Heatmap blur <input type="range" id="heatRadius" min="2" max="14" value="6"></label>
+        <label class="chk"><input type="checkbox" id="markersOverHeat"><span>Keep kill/loot markers on top of heatmaps</span></label>
+        <label class="chk"><input type="checkbox" id="onlyHumans"><span>Ignore matches with no human players</span></label>
+      </div>
+    </details>
+    <footer>Scroll to zoom · drag to pan · double-click to reset · <kbd>Space</kbd> play/pause</footer>
   </aside>
 
   <main>
     <div id="stage">
-      <canvas id="canvas" aria-label="Minimap with player journeys"></canvas>
+      <canvas id="canvas" aria-label="Minimap with player data"></canvas>
       <div id="tip" hidden></div>
       <div id="loading">Loading…</div>
-      <div id="empty" hidden>No data for this filter.</div>
+      <div id="empty" hidden>No matches for this selection - try turning on more days.</div>
+      <div id="badge"></div>
       <div id="zoom">
         <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
         <button id="zout" title="Zoom out" aria-label="Zoom out">−</button>
-        <button id="zreset" title="Reset view" aria-label="Reset view">⤢</button>
+        <button id="zreset" title="Fit map to screen" aria-label="Fit map to screen">⤢</button>
       </div>
-      <div id="badge"></div>
-      <div id="legend" aria-label="Map legend">
-        <div><i class="ln h"></i> Human player route</div>
-        <div><i class="ln b"></i> Bot route</div>
-        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#facc15" stroke="#000"><path d="M8 2l6 6-6 6-6-6z"/></svg> Loot picked up</div>
-        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#fb923c" stroke="#000"><circle cx="8" cy="8" r="5"/></svg> Kill</div>
-        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#ef4444" stroke="#000"><path d="M3 5l2-2 3 3 3-3 2 2-3 3 3 3-2 2-3-3-3 3-2-2 3-3z"/></svg> Death</div>
-        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#a78bfa" stroke="#000"><path d="M8 14 14 4H2z"/></svg> Storm death</div>
+      <div id="legend" aria-label="Legend"></div>
+      <div id="help" hidden>
+        <button id="helpClose" aria-label="Close">×</button>
+        <h3>Welcome - three things to know</h3>
+        <ol>
+          <li><b>Pick a view</b> in step 1: routes, traffic, fights, deaths, loot - or replay one match.</li>
+          <li><b>Look for the numbered pins.</b> They mark the biggest hotspots; click one to zoom in.</li>
+          <li><b>Use the legend</b> (bottom-left) to show or hide humans, bots and event types.</li>
+        </ol>
+        <button id="helpOk" class="primary">Got it</button>
       </div>
-      <div id="help" hidden><button id="helpClose" aria-label="Close">×</button><h3>How to read this</h3>
-        <p><b>Lines</b> are player journeys: <span style="color:#22d3ee">cyan = human</span>, <span style="color:#f472b6">pink = bot</span>.</p>
-        <p><b>Markers:</b> ◆ loot · ● kill · ✕ death · ▼ storm death.</p>
-        <p><b>Start:</b> pick a <i>Match</i> and press ▶, or choose a <i>Heatmap</i> (Death zones shows where the level kills players).</p>
-        <p><b>Aggregate view</b> overlays every match in the filter, all starting at 00:00.</p>
-        <p>Scroll = zoom · drag = pan · double-click = reset · <kbd>Space</kbd> play.</p></div>
     </div>
     <div id="timeline">
       <button id="play" aria-label="Play">▶</button>
       <div class="scrub">
-        <canvas id="spark" height="30"></canvas>
+        <div id="tlabel"></div>
+        <canvas id="spark" height="26"></canvas>
         <input type="range" id="scrub" min="0" max="100" step="1" value="100" aria-label="Match time">
       </div>
       <div id="clock">00:00 / 00:00</div>

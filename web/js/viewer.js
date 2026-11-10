@@ -7,14 +7,26 @@ export class Viewer {
     this.c = canvas; this.ctx = canvas.getContext('2d'); this.tip = tooltip;
     this.view = { k: 1, x: 0, y: 0 };
     this.img = null; this.heat = null; this.mapInfo = null;
-    this.matches = []; this.opts = {}; this.tc = Infinity; this.hover = null;
+    this.matches = []; this.opts = {}; this.tc = Infinity; this.hover = null; this.pins = []; this.hot = null; this.onPin = null;
     this._raf = 0;
     new ResizeObserver(() => this.resize()).observe(canvas.parentElement);
     this.bind();
   }
 
   setMap(img, info) { this.img = img; this.mapInfo = info; this.resetView(); }
-  setData(matches, opts, tc, heat) { this.matches = matches; this.opts = opts; this.tc = tc; this.heat = heat; this.requestDraw(); }
+  setData(matches, opts, tc, heat, pins = [], hot = null) { this.matches = matches; this.opts = opts; this.tc = tc; this.heat = heat; this.pins = pins; this.hot = hot; this.requestDraw(); }
+
+  /** smoothly centre on a minimap-pixel point and zoom in */
+  focus(px, py, zoom = 3.2) {
+    const from = { ...this.view }, k = this.fit * zoom, to = { k, x: this.w / 2 - px * k, y: this.h / 2 - py * k }, t0 = performance.now();
+    const step = now => { const f = Math.min(1, (now - t0) / 350), e = 1 - Math.pow(1 - f, 3);
+      this.view = { k: from.k + (to.k - from.k) * e, x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e }; this.draw(); if (f < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  pinAt(mx, my) {
+    for (const pin of this.pins) { const sx = pin.px * this.view.k + this.view.x, sy = pin.py * this.view.k + this.view.y; if ((sx - mx) ** 2 + (sy - my) ** 2 < 15 * 15) return pin; }
+    return null;
+  }
 
   resize() {
     const p = this.c.parentElement, dpr = window.devicePixelRatio || 1;
@@ -40,7 +52,10 @@ export class Viewer {
     const c = this.c; let drag = null;
     c.addEventListener('wheel', e => { e.preventDefault(); const r = c.getBoundingClientRect(); this.zoomBy(e.deltaY < 0 ? 1.18 : 1 / 1.18, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
     c.addEventListener('pointerdown', e => { c.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, vx: this.view.x, vy: this.view.y }; c.classList.add('grabbing'); });
-    c.addEventListener('pointerup', () => { drag = null; c.classList.remove('grabbing'); });
+    c.addEventListener('pointerup', e => {
+      const moved = drag && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 4; drag = null; c.classList.remove('grabbing');
+      if (!moved) { const r = c.getBoundingClientRect(), pin = this.pinAt(e.clientX - r.left, e.clientY - r.top); if (pin && this.onPin) this.onPin(pin); }
+    });
     c.addEventListener('pointermove', e => {
       const r = c.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
       if (drag) { this.view.x = drag.vx + e.clientX - drag.x; this.view.y = drag.vy + e.clientY - drag.y; this.hideTip(); this.requestDraw(); return; }
@@ -78,6 +93,33 @@ export class Viewer {
     if (o.paths) this.drawPaths(many, px);
     if (o.heat === 'off' || o.markersOverHeat) this.drawMarkers(px, many);
     this.drawHeads(px);
+    this.drawPins();
+  }
+
+  /** numbered hotspot callouts, drawn in screen space so they stay readable at any zoom; labels dodge each other */
+  drawPins() {
+    if (!this.pins.length || this.opts.heat === 'off') return;
+    const ctx = this.ctx, v = this.view; ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.font = '600 12px ui-sans-serif,system-ui,sans-serif'; ctx.textBaseline = 'middle';
+    const pts = this.pins.map(pin => ({ pin, x: pin.px * v.k + v.x, y: pin.py * v.k + v.y })).filter(o => o.x > -40 && o.y > -20 && o.x < this.w + 40 && o.y < this.h + 20);
+    const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    const placed = pts.map(o => ({ x: o.x - 13, y: o.y - 13, w: 26, h: 26 }));          // every pin circle is an obstacle
+    for (const o of pts) {
+      const w = ctx.measureText(o.pin.label).width + 18, h = 24, { x, y } = o;
+      const cands = [[x + 20, y - 12], [x - 20 - w, y - 12], [x - w / 2, y - 40], [x - w / 2, y + 16], [x + 20, y - 34], [x - 20 - w, y + 10]];
+      let best = cands.find(([bx, by]) => bx > 4 && bx + w < this.w - 4 && by > 4 && by + h < this.h - 4 && !placed.some(r => hit({ x: bx, y: by, w, h }, r))) || cands[0];
+      o.box = { x: best[0], y: best[1], w, h }; placed.push(o.box);
+    }
+    for (const o of pts) {
+      const { x: bx, y: by, w: bw } = o.box;
+      ctx.fillStyle = 'rgba(8,11,16,.9)'; ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(bx, by, bw, 24, 12); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.fillText(o.pin.label, bx + 9, by + 12.5);
+    }
+    for (const o of pts) {
+      ctx.beginPath(); ctx.arc(o.x, o.y, 12, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#0b0f16'; ctx.stroke();
+      ctx.fillStyle = '#0b0f16'; ctx.textAlign = 'center'; ctx.fillText(String(o.pin.rank), o.x, o.y + 0.5);
+    }
   }
 
   drawPaths(many, px) {
@@ -134,6 +176,16 @@ export class Viewer {
   }
 
   updateHover(mx, my, cx, cy) {
+    const r0 = this.c.parentElement.getBoundingClientRect(), place = () => { this.tip.style.left = Math.min(cx - r0.left + 14, r0.width - 250) + 'px'; this.tip.style.top = Math.max(cy - r0.top - 10, 4) + 'px'; this.tip.hidden = false; };
+    const pin = this.opts.heat !== 'off' ? this.pinAt(mx, my) : null;
+    if (pin) { this.tip.innerHTML = `<b>Hotspot #${pin.rank}</b><br>${pin.detail}<br><span style="color:#8b97a8">Click to zoom in</span>`; place(); this.c.style.cursor = 'pointer'; return; }
+    if (this.opts.heat !== 'off' && !this.opts.markersOverHeat && this.hot) {
+      const [wx0, wy0] = this.toWorldPx(mx, my), h = this.hot, i = Math.floor(wx0 / MAP_SIZE * h.G), j = Math.floor(wy0 / MAP_SIZE * h.G);
+      if (i < 0 || j < 0 || i >= h.G || j >= h.G) return this.hideTip();
+      const n = h.counts[j * h.G + i];
+      this.tip.innerHTML = `<b>${n.toLocaleString()} ${h.noun}</b> in this ~${h.cellM} m square<br><span style="color:#8b97a8">${h.total ? (n / h.total * 100).toFixed(1) : 0}% of all ${h.noun} shown</span>`;
+      place(); this.c.style.cursor = ''; return;
+    }
     let best = null, bd = 100; const [wx, wy] = this.toWorldPx(mx, my), lim = 9 / this.view.k;
     if (this.opts.heat === 'off' || this.opts.markersOverHeat) for (const mk of this.markers()) {
       const dx = mk.p.px[mk.i] - wx, dy = mk.p.py[mk.i] - wy, d = dx * dx + dy * dy;

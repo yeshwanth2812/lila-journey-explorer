@@ -1,12 +1,12 @@
 # Insights from the Journey Explorer
 
-All numbers come from the 5-day dataset (796 matches, 799 human journeys). **Every figure is reproducible with `python analysis/insights.py`** (stdlib + Pillow, reads `web/data`), and you can eyeball them in the tool: use the Heatmap modes with *Humans only*, and the stats panel. Grid statistics use a 16×16 grid over the minimap (one cell ≈ 56 m on Ambrose Valley) unless noted.
+All numbers come from the 5-day dataset (796 matches, 799 human journeys). **Every figure is reproducible with `python analysis/insights.py`** (stdlib + Pillow, reads `web/data`), and you can eyeball them in the tool: use the Traffic, Fights, Deaths and Loot views, and the stats panel. Grid statistics use a 16×16 grid over the minimap (one cell ≈ 56 m on Ambrose Valley) unless noted.
 
 ---
 
 ## 1. LILA BLACK currently plays as PvE: bots are the only opposition players meet
 
-**What caught my eye.** Open any heatmap in *Kill zones* mode - the whole picture is bot fights. Switching on the PvP markers shows almost nothing.
+**What caught my eye.** Open the *Fights* view - the whole picture is bot fights. Switching on the "Player vs player" layer in Routes shows almost nothing.
 
 **Evidence.**
 - 793 of 796 matches contain at most one human journey; only 3 have two.
@@ -25,7 +25,7 @@ All numbers come from the 5-day dataset (796 matches, 799 human journeys). **Eve
 
 ## 2. Deaths cluster in a handful of cells, and a few of them are far deadlier than their traffic explains
 
-**What caught my eye.** In *Death zones* mode the heat collapses into a few hot spots (see `docs/03-heatmap-deaths.png`); on Grand Rift the corridor running through the Mine Pit lights up almost alone.
+**What caught my eye.** In the *Deaths* view the heat collapses into a few hot spots (see `docs/03-deaths-hotspots.png`); on Grand Rift the corridor running through the Mine Pit lights up almost alone.
 
 **Evidence.** (human deaths: Ambrose 317, Lockdown 99, Grand Rift 30)
 - **Ambrose Valley:** 9 of 129 visited cells hold **50%** of all deaths; 23 cells hold 80%. The worst cells, centred at minimap px (288,544), (544,544), (352,544) and (544,608), take 5.7-7.9% of deaths each while attracting only 2.0-3.5% of traffic. Three of the four run at **2.2-2.9 deaths per 100 position samples vs a median of 1.17** for any busy cell (≥1% of traffic) - roughly 2-2.5× deadlier than their footfall (the fourth is 1.7).
@@ -42,7 +42,7 @@ All numbers come from the 5-day dataset (796 matches, 799 human journeys). **Eve
 
 ## 3. Big parts of each map are almost unused, while loot and traffic pile into ~10% of the area
 
-**What caught my eye.** *Traffic* mode on Lockdown (`docs/04-lockdown-traffic.png`): bright rings around a few compounds with dark "lakes" between them.
+**What caught my eye.** The *Traffic* view on Lockdown (`docs/04-lockdown-traffic.png`): bright rings around a few compounds with dark "lakes" between them.
 
 **Evidence.** (playable area approximated from minimap brightness; 32×32 grid for traffic)
 - **Lockdown:** 54% of playable cells receive <0.1% of traffic each; the busiest 10% of cells take **48%** of all movement while the bottom half of cells get **2.8%**.
@@ -58,8 +58,9 @@ All numbers come from the 5-day dataset (796 matches, 799 human journeys). **Eve
 ---
 
 ## Caveats (read before acting on any of this)
+- **Tool vs script numbers:** the tool's numbered pins skip cells that touch a higher-ranked cell (so five pins are five distinct places), hence its list can differ slightly from the raw cell ranking printed by `analysis/insights.py`. The #1 Ambrose death spot (7.9% of deaths) is identical in both.
 - **Possible sampling effect (insight 1):** the near-absence of PvP may reflect which players were instrumented, not real play. Confirm with full match rosters.
 - **Small samples:** Grand Rift has 59 matches and only 30 human deaths; treat its hot spots as leads, not conclusions.
 - **Playable area is approximated** from minimap brightness (cells darker than a threshold are treated as void), so unused-area percentages are ±a few points.
-- **Locations are given as minimap pixel / world coordinates** because only Grand Rift's minimap carries labels. Open the tool, set *Death zones* / *Loot*, and zoom to those coordinates to name the exact compounds.
+- **Locations are given as minimap pixel / world coordinates** because only Grand Rift's minimap carries labels. Open the tool, set *Deaths* or *Loot* view, and zoom to those coordinates to name the exact compounds.
 - Feb 14 is a partial day, so day-by-day comparisons should exclude it.

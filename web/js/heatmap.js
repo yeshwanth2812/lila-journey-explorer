@@ -55,3 +55,18 @@ export function buildHeat(matches, mode, { humans, bots, radius, tc }) {
   ctx.putImageData(img, 0, 0);
   return { canvas, count };
 }
+
+/** Coarse GxG counts (image-pixel space, row 0 = top) used for hotspot ranking and hover read-outs. */
+export function coarseCounts(matches, codes, { humans, bots, tc }, G = 16) {
+  const set = new Set(codes), counts = new Int32Array(G * G); let total = 0;
+  for (const m of matches) for (const p of m.p) {
+    if (p.bot ? !bots : !humans) continue;
+    const n = upperBound(p.t, tc);
+    for (let i = 0; i < n; i++) {
+      if (!set.has(p.e[i])) continue;
+      const cx = Math.min(G - 1, Math.floor(p.px[i] / MAP_SIZE * G)), cy = Math.min(G - 1, Math.floor(p.py[i] / MAP_SIZE * G));
+      counts[cy * G + cx]++; total++;
+    }
+  }
+  return { counts, total, G };
+}

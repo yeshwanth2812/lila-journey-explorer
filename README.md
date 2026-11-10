@@ -4,25 +4,26 @@ A browser tool that lets Level Designers see how players actually move, fight, l
 
 **Live URL:** **[https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)** &nbsp;·&nbsp; Docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [INSIGHTS.md](INSIGHTS.md) · [Plain-language explainer](docs/EXPLAINER.md)
 
-![overview](docs/01-aggregate.png)
+![overview](docs/01-routes.png)
 
 ## What you can do (walkthrough)
-| Feature | How |
-|---|---|
-| **Quick views** | Four one-click buttons answer common questions: *Where do players die? Where do they go? Where is loot taken?* and *Watch a match* (replays the busiest one). A caption on the map always says what you're looking at and how to read it; a legend sits bottom-left. |
-| **Pick map / date / match** | Left panel: map cards, date chips (multi-select), match list (sortable by length, kills, deaths, loot; each row shows humans/bots and event counts). "All matches" overlays every match in the filter. |
-| **Journeys on the right minimap** | Paths are drawn on the minimap using the README's world→pixel mapping (see ARCHITECTURE.md). **Humans = cyan, thick; bots = pink, thin.** |
-| **Event markers** | ◆ loot · ● kill (orange = bot, green = human) · ✕ death (red = bot, green = human) · ▼ storm death. Toggle each; hover for player, match time and world coordinates. |
-| **Timeline / playback** | Bottom bar: play/pause (`Space`), scrub, step ±5 s (`←` `→`), speed 1-60×. Paths grow and markers appear as time passes; with one match selected you also see live player dots. The strip above the slider shows *when* loot (yellow), kills (orange) and deaths (red) happen. In aggregate mode all matches are time-aligned to 00:00. |
-| **Heatmaps** | Traffic · Kill zones · Death zones · Loot, with opacity and spread sliders. They respect every filter, the human/bot toggles and the time cursor. |
-| **Zoom / pan** | Wheel to zoom, drag to pan, double-click to reset. |
-| **Shareable views** | The URL hash stores map, dates, match and heatmap, e.g. `#map=Lockdown&heat=deaths`. |
+The sidebar is a short top-to-bottom flow, and every control explains itself:
 
-![playback](docs/02-match-playback.png)
-![heatmap](docs/03-heatmap-deaths.png)
+| Step | What it does |
+|---|---|
+| **1 · What do you want to see?** | Six big cards, each answering a plain question: **Routes** (every player's path) · **Traffic** (where players go) · **Fights** (where kills happen) · **Deaths** (where players die) · **Loot** (where loot is taken) · **Replay** (watch one match unfold, auto-picks the busiest). |
+| **2 · Which map and days?** | Map cards with minimap thumbnails; day chips (multi-select, "All days"). |
+| **3 · Context panel** | Changes with the view. For heatmaps: a **ranked list of the top 5 hotspots** (share of the total, plus "× risk" = how much deadlier than average per visit, for deaths). For Replay: a match picker showing humans/bots, loot, kills, deaths. |
+| **Numbered pins on the map** | The same top-5 hotspots drawn on the minimap (e.g. "#1 · 7.9% of deaths · 2.5× risk"). **Click a pin or a list item to zoom to it.** Hover any heatmap to read "N deaths in this ~56 m square". |
+| **Legend = layer switches** | Bottom-left of the map. Click *Human players, Bots, Loot, Killed a bot, Killed by a bot, Player vs player, Died to the storm* to show/hide them. In heatmap views it becomes a colour scale. Humans are cyan, bots pink. |
+| **Timeline / playback** | Bottom bar: ▶ (or `Space`), scrub, ±5 s (`←` `→`), speed 1-60×. The strip shows *when* loot (yellow), fights (orange) and deaths (red) happen. In non-replay views it is a "time window": drag left to see only the first minutes of every match. |
+| **Zoom, pan, share** | Wheel to zoom, drag to pan, double-click to reset. The URL stores your view (e.g. `#map=Lockdown&lens=deaths`). The **?** button re-opens the welcome card. |
+
+![playback](docs/02-replay.png)
+![heatmap](docs/03-deaths-hotspots.png)
 
 ## Walkthrough video
-[`docs/walkthrough.mp4`](docs/walkthrough.mp4) - ~40-second tour of every feature (map/date/match filters, playback, markers, heatmaps, zoom, share link).
+[`docs/walkthrough.mp4`](docs/walkthrough.mp4) - ~40-second tour of every feature (the six views, hotspot pins, replay, zoom).
 
 ## Tech stack
 Python 3 (offline pipeline + `analysis/insights.py`; Pillow, optional pyarrow) → static JSON/WebP → vanilla JS ES modules + Canvas 2D. **No backend, no env vars, no build step.**

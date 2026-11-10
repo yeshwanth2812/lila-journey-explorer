@@ -6,16 +6,18 @@
 LILA's Level Designers have raw telemetry - rows of "player X was at position Y at time Z" - but cannot *see* it. They need to answer questions like: *Where do players die? Which parts of the map does nobody visit? Is the loot where I expect it?* This tool turns 89,000 telemetry rows (5 days, 796 matches, 3 maps) into pictures on the actual minimap, in a browser, with no install.
 
 ## 2. Use it in 2 minutes
-Open **https://yeshwanth2812.github.io/lila-journey-explorer/** and try the four **Quick views** at the top left:
+Open **https://yeshwanth2812.github.io/lila-journey-explorer/**. In step 1, pick what you want to see:
 
-| Button | What you see | How to read it |
+| Card | The question it answers | How to read it |
 |---|---|---|
-| **Where do players die?** | Glowing blobs on the map | Brighter = more deaths in that spot. These are the level's danger zones. |
-| **Where do players go?** | Traffic glow | Dark areas are routes almost nobody takes. |
-| **Where is loot taken?** | Loot glow | Bright = heavily looted, dark = ignored. |
-| **Watch a match** | A replay of the busiest match | Cyan dot = human player, pink = bots. Markers (loot ◆, kill ●, death ✕, storm ▼) appear as they happen. |
+| **Routes** | Which paths do players take? | One line per player; cyan = human, pink = bot. |
+| **Traffic** | Where do players go? | Brighter glow = more movement; dark patches are ignored areas. |
+| **Fights** | Where do kills happen? | Brighter = more kills (almost all against bots). |
+| **Deaths** | Where do players die? | Brighter = more deaths. Pins show the top 5 spots with their share of all deaths and a **risk** multiple (how much deadlier than the map average, per visit). |
+| **Loot** | Where is loot picked up? | Brighter = more pickups; dark = rarely looted. |
+| **Replay** | What happens in one match? | Plays the busiest match; cyan dot = human, pink = bots; loot ◆, kills ●, deaths ✕, storm ▼ appear as they happen. |
 
-Then refine: pick a **map**, tick **dates**, choose a single **match** to replay, toggle humans/bots/event types, drag the timeline, zoom with the mouse wheel. The **?** button re-opens the help card, and the URL always reflects your view, so you can share a link to exactly what you're looking at.
+Then choose the **map** and **days** (step 2). On the map, **numbered pins** mark the biggest hotspots - click one to zoom in, or hover any heatmap to read the exact count. The **legend** at bottom-left is also the set of layer switches (click to hide/show humans, bots, loot, kills, deaths, storm). The timeline at the bottom is a match clock in Replay, and a "time window" elsewhere (drag left to see only the first minutes of every match). The **?** button re-opens the welcome card, and the URL always reflects your view, so you can share a link to exactly what you're looking at.
 
 ## 3. How it works (the 4 steps)
 1. **Read the raw files.** A Python script reads all 1,243 data files (one per player per match).
