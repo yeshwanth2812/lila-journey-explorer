@@ -16,19 +16,30 @@
       <div style="flex:1"><h1>Journey Explorer</h1><p>LILA BLACK · Feb 10–14, 2026</p></div><button id="helpBtn" class="help" aria-label="How to use" title="How to use">?</button>
     </header>
 
+    <section class="quick">
+      <h2>Quick views <span class="muted">one click answers a question</span></h2>
+      <div id="quick" class="qgrid">
+        <button data-q="deaths"><b>Where do players die?</b><small>Death-zone heatmap</small></button>
+        <button data-q="traffic"><b>Where do players go?</b><small>Traffic heatmap</small></button>
+        <button data-q="loot"><b>Where is loot taken?</b><small>Loot heatmap</small></button>
+        <button data-q="watch"><b>Watch a match</b><small>Replays the busiest one</small></button>
+      </div>
+    </section>
+
     <section>
-      <h2>Map</h2>
+      <h2>1 · Map</h2>
       <div id="maps" class="seg"></div>
     </section>
 
     <section>
-      <h2>Date <button id="daysAll" class="link">all</button></h2>
+      <h2>2 · Dates <button id="daysAll" class="link">all</button></h2>
       <div id="days" class="chips"></div>
     </section>
 
     <section>
-      <h2>Heatmap</h2>
+      <h2>3 · Heatmap <span class="muted">spot patterns</span></h2>
       <div id="heatModes" class="chips"></div>
+      <div id="heatHint" class="hint"></div>
       <div id="heatOpts" class="stack">
         <label class="rng">Opacity <input type="range" id="heatOpacity" min="20" max="100" value="80"></label>
         <label class="rng">Spread <input type="range" id="heatRadius" min="2" max="14" value="6"></label>
@@ -38,7 +49,7 @@
     </section>
 
     <section>
-      <h2>Match <span id="matchCount" class="muted"></span></h2>
+      <h2>4 · Replay a match <span id="matchCount" class="muted"></span></h2>
       <div class="row">
         <select id="sort" aria-label="Sort matches">
           <option value="date">Sort: chronological</option>
@@ -54,7 +65,7 @@
     </section>
 
     <section>
-      <h2>Players &amp; events</h2>
+      <h2>5 · Show / hide layers</h2>
       <div class="row wrap">
         <label class="tog human"><input type="checkbox" id="showHumans" checked><span><i></i>Humans</span></label>
         <label class="tog bot"><input type="checkbox" id="showBots" checked><span><i></i>Bots</span></label>
@@ -79,6 +90,14 @@
         <button id="zreset" title="Reset view" aria-label="Reset view">⤢</button>
       </div>
       <div id="badge"></div>
+      <div id="legend" aria-label="Map legend">
+        <div><i class="ln h"></i> Human player route</div>
+        <div><i class="ln b"></i> Bot route</div>
+        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#facc15" stroke="#000"><path d="M8 2l6 6-6 6-6-6z"/></svg> Loot picked up</div>
+        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#fb923c" stroke="#000"><circle cx="8" cy="8" r="5"/></svg> Kill</div>
+        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#ef4444" stroke="#000"><path d="M3 5l2-2 3 3 3-3 2 2-3 3 3 3-2 2-3-3-3 3-2-2 3-3z"/></svg> Death</div>
+        <div><svg width="12" height="12" viewBox="0 0 16 16" fill="#a78bfa" stroke="#000"><path d="M8 14 14 4H2z"/></svg> Storm death</div>
+      </div>
       <div id="help" hidden><button id="helpClose" aria-label="Close">×</button><h3>How to read this</h3>
         <p><b>Lines</b> are player journeys: <span style="color:#22d3ee">cyan = human</span>, <span style="color:#f472b6">pink = bot</span>.</p>
         <p><b>Markers:</b> ◆ loot · ● kill · ✕ death · ▼ storm death.</p>

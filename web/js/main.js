@@ -51,9 +51,7 @@ function refresh(resetTime) {
   S.t = Math.min(S.t, maxT);
   renderMaps(); renderDays(); renderMatchList(); renderStats(); drawSpark(); redraw(true); saveHash();
   $('empty').hidden = sel.length > 0;
-  const m = S.matchId && sel[0];
-  $('badge').innerHTML = m ? `<b>Match ${m.id.slice(0, 8)}</b> · ${dayLabel(m.day)} · ${fmtTime(m.dur)} · ${m.p.filter(p => !p.bot).length} human, ${m.p.filter(p => p.bot).length} bot journeys`
-    : `<b>${index.maps[S.map].label}</b> · ${sel.length} matches overlaid · all start at 00:00`;
+  describe();
 }
 
 let heatKey = '', heatCanvas = null, heatCount = 0, lastHeat = 0;
@@ -66,7 +64,7 @@ function redraw(force) {
       heatCanvas = r.canvas; heatCount = r.count; heatKey = key; lastHeat = performance.now();
     }
   }
-  $('heatNote').textContent = S.heat === 'off' ? '' : `${heatCount.toLocaleString()} ${HEAT_MODES[S.heat].label.toLowerCase()} events plotted · brightness is relative (98th-percentile scaled)`;
+  $('heatNote').textContent = S.heat === 'off' ? '' : `${heatCount.toLocaleString()} ${({ traffic: 'position samples', kills: 'kills', deaths: 'deaths', loot: 'loot pickups' })[S.heat]} plotted · brightness is relative to the busiest spots`;
   viewer.setData(sel, { humans: S.humans, bots: S.bots, paths: S.paths, events: S.events, heat: S.heat, heatOpacity: S.heatOpacity, markersOverHeat: S.markersOverHeat, q: index.q }, tc, heatCanvas);
   $('clock').textContent = `${fmtTime(Math.min(S.t, maxT))} / ${fmtTime(maxT)}`;
   const sc = $('scrub'); sc.max = Math.max(1, Math.ceil(maxT)); sc.value = Math.min(S.t, maxT);
@@ -97,7 +95,8 @@ function buildStaticUI() {
     return `<label title="${m.label}"><input type="checkbox" data-ev="${c}" checked><svg width="16" height="16" viewBox="0 0 16 16" fill="${m.color}" stroke="#000" stroke-opacity=".6">${iconPath[m.glyph]}</svg>${m.label}</label>`; }).join('');
   $('events').addEventListener('change', e => { const c = e.target.dataset.ev; if (c) { S.events[c] = e.target.checked; redraw(true); renderStats(); } });
   $('heatModes').innerHTML = ['off', ...Object.keys(HEAT_MODES)].map(k => `<button data-h="${k}">${k === 'off' ? 'Off' : HEAT_MODES[k].label}</button>`).join('');
-  $('heatModes').addEventListener('click', e => { const k = e.target.closest('button')?.dataset.h; if (k) { S.heat = k; S.paths = k === 'off'; $('showPaths').checked = S.paths; syncHeatUI(); redraw(true); saveHash(); } });
+  $('heatModes').addEventListener('click', e => { const k = e.target.closest('button')?.dataset.h; if (k) setHeat(k); });
+  $('quick').addEventListener('click', e => { const q = e.target.closest('button')?.dataset.q; if (q) quickView(q); });
   const bind = (id, key, ev = 'change', get = e => e.target.checked, after = () => { redraw(true); renderStats(); }) => $(id).addEventListener(ev, e => { S[key] = get(e); after(); });
   bind('showHumans', 'humans'); bind('showBots', 'bots'); bind('showPaths', 'paths'); bind('markersOverHeat', 'markersOverHeat');
   bind('heatOpacity', 'heatOpacity', 'input', e => e.target.value / 100, () => redraw(true));
@@ -123,6 +122,40 @@ function buildStaticUI() {
   $('showHumans').checked = S.humans; $('onlyHumans').checked = S.onlyHumans; $('showPaths').checked = S.paths; syncHeatUI();
 }
 const metaOk = id => !S.onlyHumans || metaById.get(id).humans > 0;
+function setHeat(k) {
+  S.heat = k; S.paths = k === 'off'; $('showPaths').checked = S.paths;
+  syncHeatUI(); describe(); redraw(true); saveHash();
+}
+/** One-click answers to a designer's common questions. */
+function quickView(q) {
+  stop();
+  if (q === 'watch') {
+    const pool = index.matches.filter(x => x.map === S.map && S.days.has(x.day) && x.humans > 0);
+    if (!pool.length) return;
+    const best = pool.reduce((a, b) => (b.kills + b.deaths + b.loot / 10 > a.kills + a.deaths + a.loot / 10 ? b : a));
+    S.matchId = best.id; S.heat = 'off'; S.paths = true; $('showPaths').checked = true;
+    refresh(true); S.t = 0; syncHeatUI(); describe(); redraw(true); play(); return;
+  }
+  S.matchId = null; refresh(true); setHeat(q);
+}
+const HEAT_TEXT = {
+  traffic: ['Where players go', 'Brighter = more movement. Dark areas are routes almost nobody takes.'],
+  kills: ['Where players get kills', 'Brighter = more kills happen here (mostly against bots).'],
+  deaths: ['Where players die', 'Brighter = more deaths per spot. These are the level\'s danger zones.'],
+  loot: ['Where loot is picked up', 'Brighter = more pickups. Dark areas are rarely looted.'],
+};
+/** Plain-language caption: always tells the viewer what they are looking at and how to read it. */
+function describe() {
+  const mp = index.maps[S.map].label, m = S.matchId && sel[0];
+  const scope = m ? `match #${m.id.slice(0, 6)} (${dayLabel(m.day)}, ${fmtTime(m.dur)} long)` : `${sel.length} matches on ${mp}`;
+  let t, d;
+  if (S.heat !== 'off') { [t, d] = HEAT_TEXT[S.heat]; t += ` · ${scope}`; }
+  else if (m) { t = `Replay of ${scope}`; d = 'Press ▶ to watch it unfold: cyan dot = human player, pink = bots. Markers pop up as things happen.'; }
+  else { t = `All routes · ${scope}`; d = 'Every line is one player\'s route, all matches drawn on top of each other. Pick a match (step 4) to replay one.'; }
+  $('badge').innerHTML = `<b>${t}</b><span>${d}</span>`;
+  $('heatHint').textContent = S.heat === 'off' ? '' : HEAT_TEXT[S.heat][1];
+  [...$('quick').children].forEach(b => b.classList.toggle('on', b.dataset.q === S.heat));
+}
 function syncHeatUI() {
   [...$('heatModes').children].forEach(b => b.classList.toggle('on', b.dataset.h === S.heat));
   $('heatOpts').style.display = S.heat === 'off' ? 'none' : '';

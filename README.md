@@ -2,13 +2,14 @@
 
 A browser tool that lets Level Designers see how players actually move, fight, loot and die on the three LILA BLACK maps, built from 5 days of production telemetry (Feb 10-14 2026, 1,243 journeys, 796 matches, 89k events).
 
-**Live URL:** **[https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)** &nbsp;·&nbsp; Docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [INSIGHTS.md](INSIGHTS.md)
+**Live URL:** **[https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)** &nbsp;·&nbsp; Docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [INSIGHTS.md](INSIGHTS.md) · [Plain-language explainer](docs/EXPLAINER.md)
 
 ![overview](docs/01-aggregate.png)
 
 ## What you can do (walkthrough)
 | Feature | How |
 |---|---|
+| **Quick views** | Four one-click buttons answer common questions: *Where do players die? Where do they go? Where is loot taken?* and *Watch a match* (replays the busiest one). A caption on the map always says what you're looking at and how to read it; a legend sits bottom-left. |
 | **Pick map / date / match** | Left panel: map cards, date chips (multi-select), match list (sortable by length, kills, deaths, loot; each row shows humans/bots and event counts). "All matches" overlays every match in the filter. |
 | **Journeys on the right minimap** | Paths are drawn on the minimap using the README's world→pixel mapping (see ARCHITECTURE.md). **Humans = cyan, thick; bots = pink, thin.** |
 | **Event markers** | ◆ loot · ● kill (orange = bot, green = human) · ✕ death (red = bot, green = human) · ▼ storm death. Toggle each; hover for player, match time and world coordinates. |
@@ -21,7 +22,7 @@ A browser tool that lets Level Designers see how players actually move, fight, l
 ![heatmap](docs/03-heatmap-deaths.png)
 
 ## Walkthrough video
-[`docs/walkthrough.mp4`](docs/walkthrough.mp4) - ~35-second tour of every feature (map/date/match filters, playback, markers, heatmaps, zoom, share link).
+[`docs/walkthrough.mp4`](docs/walkthrough.mp4) - ~40-second tour of every feature (map/date/match filters, playback, markers, heatmaps, zoom, share link).
 
 ## Tech stack
 Python 3 (offline pipeline + `analysis/insights.py`; Pillow, optional pyarrow) → static JSON/WebP → vanilla JS ES modules + Canvas 2D. **No backend, no env vars, no build step.**
