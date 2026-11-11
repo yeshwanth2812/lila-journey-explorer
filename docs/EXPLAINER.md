@@ -1,9 +1,9 @@
-# LILA BLACK Journey Explorer - plain-language explainer
+# Trailscope - plain-language explainer
 
 *For anyone (designer, PM, interviewer) who wants to understand what this is, how to use it, and why it was built this way - no code knowledge needed.*
 
 ## 1. The problem in one paragraph
-LILA's Level Designers have raw telemetry - rows of "player X was at position Y at time Z" - but cannot *see* it. They need to answer questions like: *Where do players die? Which parts of the map does nobody visit? Is the loot where I expect it?* This tool turns 89,000 telemetry rows (5 days, 796 matches, 3 maps) into pictures on the actual minimap, in a browser, with no install.
+LILA's Level Designers have raw telemetry - rows of "player X was at position Y at time Z" - but cannot *see* it. They need to answer questions like: *Where do players die? Which parts of the map does nobody visit? Is the loot where I expect it?* Trailscope turns 89,000 telemetry rows (5 days, 796 matches, 3 maps) into pictures on the actual minimap, in a browser, with no install.
 
 ## 2. Use it in 2 minutes
 Open **https://yeshwanth2812.github.io/lila-journey-explorer/**. In step 1, pick what you want to see:

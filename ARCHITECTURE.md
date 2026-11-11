@@ -1,4 +1,4 @@
-# Architecture
+# Architecture - Trailscope
 
 **Live tool:** [https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)
 

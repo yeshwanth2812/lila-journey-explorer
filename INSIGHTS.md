@@ -1,4 +1,4 @@
-# Insights from the Journey Explorer
+# Insights from Trailscope
 
 All numbers come from the 5-day dataset (796 matches, 799 human journeys). **Every figure is reproducible with `python analysis/insights.py`** (stdlib + Pillow, reads `web/data`), and you can eyeball them in the tool: use the Traffic, Fights, Deaths and Loot views, and the stats panel. Grid statistics use a 16×16 grid over the minimap (one cell ≈ 56 m on Ambrose Valley) unless noted.
 

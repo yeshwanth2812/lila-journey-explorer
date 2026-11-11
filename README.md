@@ -1,6 +1,9 @@
-# LILA BLACK · Player Journey Explorer
+<p align="center"><img src="web/logo.svg" width="88" alt="Trailscope logo"></p>
 
-A browser tool that lets Level Designers see how players actually move, fight, loot and die on the three LILA BLACK maps, built from 5 days of production telemetry (Feb 10-14 2026, 1,243 journeys, 796 matches, 89k events).
+# Trailscope
+**Player journey explorer for LILA BLACK**
+
+Trailscope is a browser tool that lets Level Designers see how players actually move, fight, loot and die on the three LILA BLACK maps, built from 5 days of production telemetry (Feb 10-14 2026, 1,243 journeys, 796 matches, 89k events).
 
 **Live URL:** **[https://yeshwanth2812.github.io/lila-journey-explorer/](https://yeshwanth2812.github.io/lila-journey-explorer/)** &nbsp;·&nbsp; Docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [INSIGHTS.md](INSIGHTS.md) · [Plain-language explainer](docs/EXPLAINER.md)
 
