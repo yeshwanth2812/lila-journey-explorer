@@ -2,6 +2,7 @@ import { EVENT_META, EV, HEAT_MODES, fmtTime, dayLabel } from './constants.js';
 import { loadIndex, loadMap, selectMatches, upperBound } from './data.js';
 import { buildHeat, coarseCounts, heatGradientCss } from './heatmap.js';
 import { Viewer } from './viewer.js';
+import { initAssistant } from './assistant.js';
 
 const $ = id => document.getElementById(id);
 const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
@@ -52,6 +53,10 @@ async function init() {
   viewer.onPin = pin => viewer.focus(pin.px, pin.py);
   bindUI();
   await setMap(S.map, true);
+  initAssistant({
+    index: () => index, state: () => S, lenses: () => LENSES, pins: () => pins, hot: () => hot,
+    loadMap: m => loadMap(m, index.q), show, openMatch, focusPin: r => { const p = pins.find(x => x.rank === r); if (p) viewer.focus(p.px, p.py); },
+  });
   $('loading').classList.add('done');
   window.addEventListener('keydown', onKey);
   try { if (!localStorage.getItem('lila-welcome')) $('help').hidden = false; } catch (e) { $('help').hidden = false; }
@@ -68,6 +73,20 @@ async function setMap(map, first = false) {
   refresh(true);
 }
 const loadImg = map => imgs[map] ||= new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = `maps/${map}.webp`; });
+
+/** Used by the assistant: move the view to a map / lens / set of days and wait until it is drawn. */
+async function show({ map, lens, days }) {
+  stop();
+  if (days) S.days = new Set(days);
+  if (lens && (lens !== S.lens || S.matchId)) { S.lens = lens; S.heat = LENSES[lens].heat; S.paths = lens === 'routes' || lens === 'replay'; S.bots = lensShowsBots(lens); S.matchId = null; }
+  if (map && map !== S.map) await setMap(map); else refresh(true);
+}
+async function openMatch(id) {
+  const m = metaById.get(id); if (!m) return;
+  stop(); S.days = new Set(index.days); S.lens = 'replay'; S.heat = 'off'; S.paths = true; S.bots = true; S.matchId = id;
+  if (m.map !== S.map) await setMap(m.map); else refresh(true);
+  S.t = 0; redraw(true); play();
+}
 
 function setLens(l, autoplay = true) {
   stop(); S.lens = l; S.heat = LENSES[l].heat; S.paths = l === 'routes' || l === 'replay';

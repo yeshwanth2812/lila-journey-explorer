@@ -20,6 +20,7 @@ The sidebar is a short top-to-bottom flow, and every control explains itself:
 | **Numbered pins on the map** | The same top-5 hotspots drawn on the minimap (e.g. "#1 · 7.9% of deaths · 2.5× risk"). **Click a pin or a list item to zoom to it.** Hover any heatmap to read "N deaths in this ~56 m square". |
 | **Legend = layer switches** | Bottom-left of the map. Click *Human players, Bots, Loot, Killed a bot, Killed by a bot, Player vs player, Died to the storm* to show/hide them. In heatmap views it becomes a colour scale. Humans are cyan, bots pink. |
 | **Timeline / playback** | Bottom bar: ▶ (or `Space`), scrub, ±5 s (`←` `→`), speed 1-60×. The strip shows *when* loot (yellow), fights (orange) and deaths (red) happen. In non-replay views it is a "time window": drag left to see only the first minutes of every match. |
+| **Ask Trailscope (assistant)** | The **Ask Trailscope** button (top-right of the map) opens a chat. Ask in plain words, e.g. *"Where do players die most on Lockdown?"*, *"Which areas are barely used?"*, *"What should I fix first?"*, *"Compare the three maps"*, *"Show me a good match to replay"*. It answers from the loaded data **and switches the map, lens and days so you can see the answer**; pin links zoom to the spot. It runs fully in the browser (no server, no API key). For free-form questions it can't parse, set `endpoint` in `web/config.js` to your own small proxy that holds an LLM key server-side; the page sends `{question, view, stats}` and expects `{answer}`. |
 | **Zoom, pan, share** | Wheel to zoom, drag to pan, double-click to reset. The URL stores your view (e.g. `#map=Lockdown&lens=deaths`). The **?** button re-opens the welcome card. |
 
 ![playback](docs/02-replay.png)
@@ -60,6 +61,7 @@ docs/           screenshots
 ARCHITECTURE.md  INSIGHTS.md
 ```
 ## Known limitations
+- The assistant is intent-based (deaths, fights, loot, storm, traffic, unused areas, survival, PvP, compare, replay), not a general chatbot, unless you connect an LLM proxy in `web/config.js`.
 - Matches contain almost only one human journey, so "match" playback is mostly one player plus bots (data property, see INSIGHTS #1).
 - Events on bot-owned files (`BotKill`/`BotKilled`) are drawn at the bot's position; their exact semantics aren't documented in the dataset README.
 - `ts` has 1-second resolution, so same-second events can't be ordered finer.
